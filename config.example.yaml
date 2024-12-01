@@ -1,0 +1,57 @@
+syntax: 1.0
+model_mapping:
+  deepseek-chat:
+    - "deepseek-ai/DeepSeek-V2.5"
+  deepseek-coder:
+    - "deepseek-ai/DeepSeek-V2.5"
+  model2:
+    - model2_provider1
+    - model2_provider2
+  gemini_model1:
+    - gemini_model1_provider1
+    - gemini_model1_provider2
+check_models:
+  - "gpt-4o-mini"
+  - "deepseek-chat"
+providers:
+  - provider: openai  # "openai"  "siliconflow" "openaiCompatible"
+    data:
+      - name: provider1
+        url: https://api.provider1.com
+        models:
+          - model1_provider1
+          - model2_provider1
+        api_keys:
+          - your_api_key_here
+          - your_api_key_here_2
+      - name: provider1
+        url: https://api.provider1.com
+        models:
+          - model1_provider1
+          - model2_provider1
+        api_keys:
+          - your_api_key_here
+          - your_api_key_here_2
+  - provider: openaiCompatible  # "openai"  "siliconflow" "openaiCompatible"
+    data:
+      - name: provider1
+        url: https://api.provider1.com
+        models:
+          - model1_provider1
+          - model2_provider1
+        api_keys:
+          - your_api_key_here
+          - your_api_key_here_2
+  - provider: siliconflow  # "openai"  "siliconflow" "openaiCompatible"
+    data:
+      - name: provider1
+        url: https://api.provider1.com
+        models:
+        api_keys:
+          - your_api_key_here
+          - your_api_key_here_2
+          - your_api_key_here_2
+          - your_api_key_here_2
+          - your_api_key_here_2
+          - your_api_key_here_2
+          - your_api_key_here_2
