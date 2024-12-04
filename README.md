@@ -5,6 +5,11 @@
 - 负载均衡
 - 定时检查，检查模型可配置
 
+## 运行
+
+- `/cmd/api_app/`代码主体
+- `/cmd/http_server`Mock,前期用来学习，了解接口的
+
 ## config讲解
 
 `model_mapping`：模型映射，实现调用方一个模型到提供方多个模型的映射
@@ -44,3 +49,8 @@ api_keys: # 密钥列表
 - your_api_key_here_2
 ```
 
+## 调用
+
+BaseURL: `http://localhost:8080`
+
+API_KEY: 随便写
