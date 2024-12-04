@@ -15,7 +15,7 @@ check_models: #需要定时检测的模型，传入第三方调用的模型名�
   - "deepseek-chat"
   - "deepseek-coder"
 providers:
-  - provider: openai  # "openai"  "siliconflow" "openaiCompatible"
+  - provider: openai  # "openai"  "siliconflow" "openaiCompatible" “openaiCompatibleNoFetchModel”
     data:
       - name: provider1
         url: https://api.provider1.com
