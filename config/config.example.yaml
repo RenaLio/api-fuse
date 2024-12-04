@@ -1,18 +1,19 @@
 syntax: 1.0
 model_mapping:
+  gpt-4o-mini: # 无须增加gpt-4o-mini到gpt-4o-mini本身的映射，程序会自动添加
+    - gpt-4o-mini-xxxx
+    - gpt-4o-mini-yyyy
   deepseek-chat:
     - "deepseek-ai/DeepSeek-V2.5"
   deepseek-coder:
     - "deepseek-ai/DeepSeek-V2.5"
-  model2:
-    - model2_provider1
-    - model2_provider2
   gemini_model1:
     - gemini_model1_provider1
     - gemini_model1_provider2
-check_models:
+check_models: #需要定时检测的模型，传入第三方调用的模型名称
   - "gpt-4o-mini"
   - "deepseek-chat"
+  - "deepseek-coder"
 providers:
   - provider: openai  # "openai"  "siliconflow" "openaiCompatible"
     data:

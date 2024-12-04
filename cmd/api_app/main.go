@@ -14,7 +14,7 @@ import (
 
 func main() {
 	fmt.Println("加载配置中...")
-	config, err := config2.Load("./config.yaml")
+	config, err := config2.Load("./config/config.yaml")
 	//fmt.Println(config)
 	if err != nil {
 		panic(err)
@@ -31,7 +31,7 @@ func main() {
 	adCh := make(chan adapter.Adapter)
 	go func() {
 		for i := range adCh {
-			fmt.Println("获取模型成功", i.GetName(), i.GetId(), i.GetModels())
+			//fmt.Println("获取模型成功", i.GetName(), i.GetId(), i.GetModels())
 			fmt.Fprintf(file, "获取模型成功: %s\t\t %d\t\t %v\n", i.GetName(), i.GetId(), i.GetModels())
 			adapters = append(adapters, i)
 		}

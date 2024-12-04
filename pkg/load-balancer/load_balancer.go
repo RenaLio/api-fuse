@@ -4,8 +4,8 @@ import (
 	v1 "awesomeGoProject/api/v1"
 	"awesomeGoProject/pkg/adapter"
 	"fmt"
+	"golang.org/x/exp/rand"
 	"net/http"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -40,44 +40,6 @@ func NewClientLoadBalancer(providers []Server, modelMapping map[string][]string,
 		ModelMapping:  modelMapping,
 		CheckModels:   checkModes,
 	}
-	//data, err := ioutil.ReadFile(configPath)
-	//if err != nil {
-	//	logrus.Fatalf("Failed to read config file: %v", err)
-	//	return nil, err
-	//}
-	//
-	//var config struct {
-	//	ModelMapping map[string][]string `json:"model_mapping"`
-	//	Providers    []BaseProvider      `json:"providers"`
-	//}
-	//if err := json.Unmarshal(data, &config); err != nil {
-	//	logrus.Fatalf("Failed to unmarshal config: %v", err)
-	//	return nil, err
-	//}
-	//
-	//providers := make([]ClientProvider, len(config.Providers))
-	//for i := range config.Providers {
-	//	config.Providers[i].Active = make(map[string]bool)
-	//	if len(config.Providers[i].Models) == 0 {
-	//		err := config.Providers[i].FetchModels()
-	//		if err != nil {
-	//			logrus.Errorf("Failed to fetch models for provider %s: %v", config.Providers[i].Name, err)
-	//			return nil, err
-	//		}
-	//	}
-	//	providers[i] = &config.Providers[i]
-	//}
-	//
-	//lb := &ClientLoadBalancer{
-	//	Providers:           providers,
-	//	ModelCountMap: make(map[string]int),
-	//	ModelMapping:        config.ModelMapping,
-	//	Index:               0,
-	//}
-	//
-	//go lb.startHealthCheck()
-
-	//return nil, nil
 }
 
 // NextProvider 返回下一个可用的Provider，传入的是原始请求的输入model
@@ -130,11 +92,7 @@ func (lb *LoadBalancer) HandleRequest(w http.ResponseWriter, r *http.Request, re
 		}
 		req.Model = modelId
 		err = srv.Chat(w, r, req)
-		key := srv.GetAPIKey()
-		keyId := "不足8位，id->" + strconv.Itoa(int(srv.GetId()))
-		if len(key) >= 8 {
-			keyId = key[len(key)-8:]
-		}
+		keyId := GetKeyId(srv)
 		if err == nil {
 			fmt.Printf("请求成功|| 请求模型:%s\t\t 实际模型:%s\t\t 服务商名称：%s\t\t ID:%v\t\t Key:%s\n", model, modelId, srv.GetName(), srv.GetId(), keyId)
 			return
@@ -164,7 +122,9 @@ func (lb *LoadBalancer) StartHealthCheck() {
 				fmt.Println("一轮健康测试已开始")
 				lb.DoHealthCheck()
 				fmt.Println("一轮健康测试已结束")
-				time.Sleep(60 * 4 * time.Minute)
+				num := rand.Intn(60)
+				total := 60*60 + num
+				time.Sleep(time.Second * time.Duration(total))
 				task <- "start"
 			}
 		}
@@ -174,11 +134,19 @@ func (lb *LoadBalancer) StartHealthCheck() {
 
 func (lb *LoadBalancer) DoHealthCheck() {
 	list := make([]string, 0)
+	tempList := make([]string, 0)
+	modelSet := make(map[string]bool)
 	for _, model := range lb.CheckModels {
 		if val, ok := lb.ModelMapping[model]; ok {
-			list = append(list, val...)
+			tempList = append(tempList, val...)
 		} else {
+			tempList = append(tempList, model)
+		}
+	}
+	for _, model := range tempList {
+		if _, ok := modelSet[model]; !ok {
 			list = append(list, model)
+			modelSet[model] = true
 		}
 	}
 	for _, model := range list {
@@ -188,21 +156,29 @@ func (lb *LoadBalancer) DoHealthCheck() {
 				ok := provider.HealthCheck(model)
 				if ok {
 					if !provider.IsModelActive(model) {
+						fmt.Printf("健康检测||失败->成功|| 请求模型:%s\t\t 服务商名称:%s\t\t  Key:%s\n", model, provider.GetName(), GetKeyId(provider))
 						provider.SetModelActive(model, true)
 						lb.Mutex.Lock()
 						if _, exist := lb.ModelMapping[model]; exist {
 							lb.ModelCountMap[model]++
 						}
 						lb.Mutex.Unlock()
+					} else {
+						fmt.Printf("健康检测||成功->成功|| 请求模型:%s\t\t 服务商名称:%s\t\t  Key:%s\n", model, provider.GetName(), GetKeyId(provider))
 					}
 				} else {
 					if provider.IsModelActive(model) {
+						fmt.Printf("健康检测||成功->失败|| 请求模型:%s\t\t 服务商名称:%s\t\t  Key:%s\n", model, provider.GetName(), GetKeyId(provider))
 						provider.SetModelActive(model, false)
 						lb.Mutex.Lock()
 						if _, exist := lb.ModelMapping[model]; exist {
-							lb.ModelCountMap[model]--
+							if lb.ModelCountMap[model] > 0 {
+								lb.ModelCountMap[model]--
+							}
 						}
 						lb.Mutex.Unlock()
+					} else {
+						fmt.Printf("健康检测||失败->失败|| 请求模型:%s\t\t 服务商名称:%s\t\t  Key:%s\n", model, provider.GetName(), GetKeyId(provider))
 					}
 				}
 				time.Sleep(1 * time.Second)
